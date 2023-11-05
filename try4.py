@@ -7,6 +7,8 @@ from typing import List, Union
 from requests import get, Response
 import telebot
 
+load_dotenv()
+
 root = Tk()
 root.title('Парсер')
 root['bg'] = '#fafafa'
@@ -29,17 +31,16 @@ entry.pack()
 entry_two = Entry(root)
 entry_two.pack()
 
-token = '6359779765:AAH_VH-UsgY4ZdU1FnZHHm1HemOSnPjdpCs'
+token = os.getenv('TOKEN')
 bot = telebot.TeleBot(token)
 PATH = 'Cars.csv'
-URL = os.getenv('URL')
 COOKIE = os.getenv('COOKIE')
 HEADERS = {
     'user-agent': os.getenv('USER_AGENT'),
     'accept': os.getenv('ACCEPT'),
     'Accept-Language': 'ru',
     'accept-encoding': 'accept - encoding: gzip, deflate, br',
-    'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101", "Opera";v="87"',
+    'sec-ch-ua': '"Chromium";v="118", "Google Chrome";v="118", "Not=A?Brand";v="99"',
     'sec-ch-ua-mobile': '?0',
     'sec-ch-ua-platform': '"Windows"',
     'Upgrade-Insecure-Requests': '1',
@@ -48,7 +49,6 @@ HEADERS = {
 
 
 def get_pages_amount(content):
-    """Calculate number of pages."""
     soup = BeautifulSoup(content, 'html.parser')
     return len(
         soup.find(
@@ -59,7 +59,6 @@ def get_pages_amount(content):
 
 
 def get_content(html):
-    """Parsing page content."""
     soup = BeautifulSoup(html, 'html.parser')
     items = soup.find_all('div', class_='ListingItem__description')
     cars = []
@@ -75,7 +74,6 @@ def get_content(html):
 
 
 def get_html(url: str, headers: dict, params: Union[None, dict] = None) -> Response:
-    """Getting an answer to the request."""
     try:
         return get(url, headers=headers, params=params)
     except Exception as error:
@@ -83,8 +81,6 @@ def get_html(url: str, headers: dict, params: Union[None, dict] = None) -> Respo
 
 
 def parse(url: str):
-    """Parsing the request."""
-    url = url or URL
     html = get_html(url, HEADERS)
     if html.status_code == 200:
         cars = []
@@ -100,7 +96,6 @@ def parse(url: str):
 
 
 def save_to_file(data) -> None:
-    """Saving data to file."""
     with open(PATH, 'w', newline='', encoding='utf-8') as file:
         w = csv.writer(file, delimiter=';')
         w.writerow(['Car', 'Link', 'Price (RUR)', 'Year'])
