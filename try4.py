@@ -1,26 +1,31 @@
 import os
 import csv
+from tkinter import PhotoImage
 from tkinter import *
+from tkinter import messagebox
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from typing import List, Union
+import requests
 from requests import get, Response
 import telebot
+from PIL import ImageTk, Image
+
 
 load_dotenv()
 
 root = Tk()
 root.title('Парсер')
 root['bg'] = '#fafafa'
-root.wm_attributes('-alpha', 0.7)
+root.wm_attributes('-alpha', 1)
 
 root.resizable(width=False, height=False)
 
 canvas = Canvas(root, width=300, height=250)
+image = Image.open("D:\Diplom\log.png")
+photo = ImageTk.PhotoImage(image.resize((300, 250)))
+image = canvas.create_image(0, 0, anchor='nw',image=photo)
+canvas.grid(row=2,column=1)
 canvas.pack()
-
-frame = Frame(root, bg='red')
-frame.place(relx=0.15, rely=0.15, relwidth=0.7, relheight=0.7)
 
 input_label = Label(root, text='Введите данные для парсинга:')
 input_label.pack()
@@ -47,16 +52,18 @@ HEADERS = {
     'Cookie': COOKIE
 }
 
-
+def get_html(url, headers, params):
+    try:
+        return get(url, headers=headers, params=params)
+    except requests.HTTPError:
+        messagebox.showinfo("Message", "При выполнении запроса произошла ошибка")
+    
 def get_pages_amount(content):
     soup = BeautifulSoup(content, 'html.parser')
     return len(
-        soup.find(
-            'span',
-            class_='ControlGroup ControlGroup_responsive_no ControlGroup_size_s ListingPagination__pages'
-        ).contents
+        soup.find('span',
+                  class_='ControlGroup ControlGroup_responsive_no ControlGroup_size_s ListingPagination__pages').contents
     )
-
 
 def get_content(html):
     soup = BeautifulSoup(html, 'html.parser')
@@ -72,30 +79,21 @@ def get_content(html):
         cars.append(car)
     return cars
 
-
-def get_html(url: str, headers: dict, params: Union[None, dict] = None) -> Response:
-    try:
-        return get(url, headers=headers, params=params)
-    except Exception as error:
-        raise ConnectionError(f'При выполнении запроса произошла ошибка: {error}')
-
-
-def parse(url: str):
-    html = get_html(url, HEADERS)
+def parse(url):
+    html = get_html(url, HEADERS,None)
     if html.status_code == 200:
         cars = []
         pages_amount = get_pages_amount(html.content)
         for i in range(1, pages_amount + 1):
-            print(f'Парсим {i} страницу из {pages_amount}...')
+            messagebox.showinfo("Message", f'Парсим {i} страницу из {pages_amount}...')
             html = get_html(url, HEADERS, params={'page': i})
             cars.extend(get_content(html.content))
-        print(f'Получены данные по {len(cars)} авто.')
+        messagebox.showinfo("Message",f'Получены данные по {len(cars)} авто.')
         return sorted(cars, key=lambda car: int(car['year']), reverse=True)
     else:
-        print(f'Сайт вернул статус-код {html.status_code}')
+        messagebox.showinfo("Message",f'При выполнении запроса произошла ошибка')
 
-
-def save_to_file(data) -> None:
+def save_to_file(data):
     with open(PATH, 'w', newline='', encoding='utf-8') as file:
         w = csv.writer(file, delimiter=';')
         w.writerow(['Car', 'Link', 'Price (RUR)', 'Year'])
@@ -106,7 +104,7 @@ def save_to_file(data) -> None:
                 car['price'],
                 car['year']
             ])
-        os.startfile(PATH)
+        file.close()
 
 def send_message(chat_id):
     file = open('Cars.csv', 'rb')

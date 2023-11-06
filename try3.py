@@ -4,9 +4,12 @@ import telebot
 import os
 from tkinter import *
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import os
 import csv
+import time
 
 
 
@@ -43,6 +46,16 @@ bot = telebot.TeleBot(token)
 def getpagecontent(url):
     browser = webdriver.Chrome()
     browser.get(url)
+    time.sleep(15)
+    try:
+        popup_element = WebDriverWait(browser, 2).until(EC.presence_of_element_located((By.XPATH, '//span[@class="Link PromoPopupHistory__body-link"]')))
+    except:
+        popup_element = None
+
+    if(popup_element != None):
+        button_promo = browser.find_element(By.XPATH, '//span[@class="Link PromoPopupHistory__body-link"]')
+        button_promo.click()
+
     block = browser.find_elements(By.CLASS_NAME,'ListingItem__description')
     if not pages:
         try:
@@ -55,7 +68,6 @@ def getpagecontent(url):
 
 
 def writecars(block):
-    global cars
     for car in block:
         car = {
             'car': car.find_element(By.CLASS_NAME, 'ListingItem__summary').text,
