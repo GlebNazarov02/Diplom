@@ -46,7 +46,7 @@ bot = telebot.TeleBot(token)
 def getpagecontent(url):
     browser = webdriver.Chrome()
     browser.get(url)
-    time.sleep(15)
+    time.sleep(400)
     try:
         popup_element = WebDriverWait(browser, 2).until(EC.presence_of_element_located((By.XPATH, '//span[@class="Link PromoPopupHistory__body-link"]')))
     except:
