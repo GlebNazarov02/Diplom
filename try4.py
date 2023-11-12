@@ -85,7 +85,6 @@ def parse(url):
         cars = []
         pages_amount = get_pages_amount(html.content)
         for i in range(1, pages_amount + 1):
-            messagebox.showinfo("Message", f'Парсим {i} страницу из {pages_amount}...')
             html = get_html(url, HEADERS, params={'page': i})
             cars.extend(get_content(html.content))
         messagebox.showinfo("Message",f'Получены данные по {len(cars)} авто.')
